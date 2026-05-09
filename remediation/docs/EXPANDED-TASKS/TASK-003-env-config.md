@@ -132,3 +132,4 @@ If a future v2 SKU uses one-time payments again, add the relevant `STRIPE_PRICE_
 _(Filled by Claude Code during implementation)_
 
 <!-- v4.1 drift correction 2026-05-09: env-var count corrected from 17 → 22; see REMEDIATION_OVERVIEW.md v4 changelog for source -->
+<!-- Convention: R-TASK env-var additions are owned by their R-TASK spec, not patched into TASK-003. The .env.local.example file is the unified runtime+buildtime surface. Header count in .env.local.example may exceed TASK-003's runtime count; this is expected. -->
