@@ -1,0 +1,92 @@
+-- APPLY: CREATE
+-- ============================================================================
+-- DEFERRED TO v2 — DO NOT APPLY TO v1 PRODUCTION DATABASE
+-- ============================================================================
+-- Decision Date: 2026-05-05
+-- Decision: R-TASK-101 Path A — team seats deferred to v2
+-- Decision Authority: Steve Macurdy
+-- This file has the .vnext suffix so the Supabase migration runner ignores it.
+-- Do NOT remove the suffix without re-opening R-TASK-101 and re-confirming
+-- with the operator. Doing so introduces tables and RLS policies that conflict
+-- with the v1 single-user-per-account contract.
+-- ============================================================================
+
+-- Migration: 007_team_memberships.sql
+-- Author: Steve
+-- Date: 2026-05-04
+-- Purpose: Team seat support for Publisher tier (R-TASK-101 Path B)
+-- Rollback: 007_team_memberships_rollback.sql
+-- Locks: AccessExclusiveLock briefly on books (RLS policy update via separate migration 008)
+-- Online/Offline: Online — additive only
+-- Destructive: No
+-- Apply only if R-TASK-101 Path B chosen. Otherwise skip and never run.
+
+CREATE TABLE team_memberships (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,  -- the paying account
+  member_id UUID REFERENCES profiles(id) ON DELETE CASCADE,           -- the invited user (NULL until accepted)
+  invitation_token TEXT UNIQUE,                                        -- random; consumed on accept
+  invitation_email TEXT NOT NULL,                                      -- email invited (may differ from member's actual email)
+  invitation_status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (invitation_status IN ('pending', 'accepted', 'declined', 'revoked', 'expired')),
+  invited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '14 days'),
+  accepted_at TIMESTAMPTZ,
+  revoked_at TIMESTAMPTZ,
+  role TEXT NOT NULL DEFAULT 'editor' CHECK (role IN ('editor', 'viewer')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(owner_id, invitation_email),
+  -- Once accepted, owner_id + member_id pair must be unique
+  EXCLUDE USING gist (owner_id WITH =, member_id WITH =) WHERE (member_id IS NOT NULL)
+);
+
+CREATE INDEX idx_team_memberships_owner ON team_memberships(owner_id) WHERE invitation_status = 'accepted';
+CREATE INDEX idx_team_memberships_member ON team_memberships(member_id) WHERE invitation_status = 'accepted';
+CREATE INDEX idx_team_memberships_token ON team_memberships(invitation_token) WHERE invitation_status = 'pending';
+CREATE INDEX idx_team_memberships_email ON team_memberships(invitation_email);
+
+ALTER TABLE team_memberships ENABLE ROW LEVEL SECURITY;
+
+-- Owners see their own team
+CREATE POLICY "Owners see own team" ON team_memberships
+  FOR SELECT USING (auth.uid() = owner_id);
+
+-- Members see memberships where they are the member
+CREATE POLICY "Members see own membership" ON team_memberships
+  FOR SELECT USING (auth.uid() = member_id);
+
+-- Owners create invitations
+CREATE POLICY "Owners create invitations" ON team_memberships
+  FOR INSERT WITH CHECK (auth.uid() = owner_id);
+
+-- Owners revoke; members decline (separate updates)
+CREATE POLICY "Owners revoke" ON team_memberships
+  FOR UPDATE USING (auth.uid() = owner_id)
+  WITH CHECK (auth.uid() = owner_id);
+
+CREATE POLICY "Members accept/decline" ON team_memberships
+  FOR UPDATE USING (auth.uid() = member_id OR invitation_email IN (
+    SELECT email FROM profiles WHERE id = auth.uid()
+  ))
+  WITH CHECK (
+    auth.uid() = member_id OR invitation_email IN (
+      SELECT email FROM profiles WHERE id = auth.uid()
+    )
+  );
+
+-- Helper view: effective book ownership including team members
+CREATE OR REPLACE VIEW effective_book_access AS
+SELECT
+  b.id AS book_id,
+  b.user_id AS owner_id,
+  b.user_id AS user_id  -- owner always has access
+FROM books b
+UNION ALL
+SELECT
+  b.id AS book_id,
+  b.user_id AS owner_id,
+  tm.member_id AS user_id
+FROM books b
+JOIN team_memberships tm ON tm.owner_id = b.user_id
+WHERE tm.invitation_status = 'accepted'
+  AND tm.member_id IS NOT NULL;
