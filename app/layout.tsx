@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
+import { Crimson_Pro } from 'next/font/google';
 import './globals.css';
+
+const crimson = Crimson_Pro({ subsets: ['latin'], variable: '--font-crimson' });
 
 export const metadata: Metadata = {
   title: 'My Best Selling Novel',
@@ -12,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={crimson.variable}>
       <body>{children}</body>
     </html>
   );
