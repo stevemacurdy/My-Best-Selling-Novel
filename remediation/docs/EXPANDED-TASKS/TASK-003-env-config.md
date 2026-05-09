@@ -26,6 +26,7 @@ This expanded task replaces the original 87-word TASK-003. Each addition is sour
 | Filename `.env.local.example` | Q-1.4 operator-answer (use default) |
 | 4 Stripe price IDs (no lifetime variants) | A.3 cascade 2026-05-06 (Decision #29 revision; lifetime tier eliminated) |
 | Removed vars documented (lifetime trio + ADMIN_EMAILS) | A.3 cascade + audit-trail discipline |
+| Env-var count drift correction (17→22) | v4 changelog (REMEDIATION_OVERVIEW.md) — RESEND_AUDIENCE_ID + NEWSLETTER_TOKEN_SECRET (R-TASK-170), RESEND_AFFILIATE_AUDIENCE_ID (R-TASK-172), INTERNAL_SECRET + GA_API_SECRET (TASK-058) |
 
 Operator confirmed all questions on 2026-05-08. No `[INFERRED-BY-CLAUDE]` content remains.
 
@@ -44,7 +45,7 @@ Operator confirmed all questions on 2026-05-08. No `[INFERRED-BY-CLAUDE]` conten
 
 ## Implementation Requirements
 
-Create `.env.local.example` listing all 17 environment variables required by the v1 application. Group by category for scanability. Each variable gets a `# Where to retrieve` comment per Q-1.3 default — comments document where the operator goes to obtain the value, not what the variable does (the latter belongs in CLAUDE.md and inline code documentation).
+Create `.env.local.example` listing all 22 environment variables required by the v1 application. Group by category for scanability. Each variable gets a `# Where to retrieve` comment per Q-1.3 default — comments document where the operator goes to obtain the value, not what the variable does (the latter belongs in CLAUDE.md and inline code documentation).
 
 ```bash
 # .env.local.example
@@ -122,10 +123,12 @@ If a future v2 SKU uses one-time payments again, add the relevant `STRIPE_PRICE_
 
 ## Tests Required
 
-- AT-005: `.env.local.example` exists at project root with all 17 variables present
+- AT-005: `.env.local.example` exists at project root with all 22 variables present
 - AT-006: Mechanical: no occurrences of `LIFETIME` or `ADMIN_EMAILS` in the file (`grep -E "LIFETIME|ADMIN_EMAILS" .env.local.example` returns zero matches)
 - AT-007: Each variable has a "Where to retrieve" comment immediately preceding it
 - AT-008: File is ASCII-only; no Unicode quote characters that break shell parsing
 
 ## Session Notes
 _(Filled by Claude Code during implementation)_
+
+<!-- v4.1 drift correction 2026-05-09: env-var count corrected from 17 → 22; see REMEDIATION_OVERVIEW.md v4 changelog for source -->
