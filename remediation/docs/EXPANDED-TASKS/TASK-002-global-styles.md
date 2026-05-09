@@ -231,3 +231,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ## Session Notes
 _(Filled by Claude Code during implementation)_
+
+<!-- v4.1 spec correction 2026-05-09: typography.family.serif must lead with 'var(--font-crimson)' for next/font compatibility; literal "Crimson Pro" alone falls back to Georgia. -->

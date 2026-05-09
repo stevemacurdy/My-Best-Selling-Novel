@@ -24,7 +24,7 @@ export const colors = {
 
 export const typography = {
   family: {
-    serif: '"Crimson Pro", Georgia, serif',
+    serif: 'var(--font-crimson), "Crimson Pro", Georgia, serif',
     sans: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
     mono: 'ui-monospace, "SF Mono", Menlo, monospace',
   },
