@@ -39,6 +39,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      audio_chunks: {
+        Row: {
+          book_id: string
+          chapter_index: number
+          created_at: string
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          id: string
+          mime_type: string | null
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          chapter_index: number
+          created_at?: string
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          chapter_index?: number
+          created_at?: string
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_chunks_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_chunks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       books: {
         Row: {
           author_name: string | null
