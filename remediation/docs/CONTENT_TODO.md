@@ -77,6 +77,21 @@ If a Tier B item gets stuck for more than 60 days, consider whether to defer to 
 
 ---
 
+## Post-signup operator actions
+
+These are one-time operator actions that must happen AFTER the operator's first signup, but BEFORE production traffic. They cannot be automated because they require an authenticated user to exist first.
+
+- [ ] Promote operator to super_admin role
+  When: Immediately after Steve completes signup at /signup
+  How: Run in Supabase SQL Editor:
+    UPDATE profiles SET role = 'super_admin' WHERE email = 'steve@woulfgroup.com';
+  Verify: SELECT id, email, role FROM profiles WHERE email = 'steve@woulfgroup.com';
+    Should show role = 'super_admin'.
+  Alternative: Use the Directus operational tool once R-TASK-176 lands; navigate to profiles, locate the row, change role field.
+  Why this can't be automated: super_admin bootstrap requires writing to a row that doesn't exist until the trigger fires on signup. No deterministic point in the build to inject this beyond "after first signup".
+
+---
+
 ## v4 packet corrections (discovered during Phase 3 application 2026-05-09)
 
 The following R-TASK migrations in `remediation/supabase/migrations/` have issues that were patched locally in `supabase/migrations/` during application. Future packet rebuilds (v4.2+) should land these fixes in the canonical:
