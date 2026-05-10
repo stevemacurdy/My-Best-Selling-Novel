@@ -39,6 +39,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      books: {
+        Row: {
+          author_name: string | null
+          book_data: Json
+          book_type: string | null
+          cover_storage_path: string | null
+          cover_url: string | null
+          created_at: string
+          genre: string | null
+          health_score: number | null
+          id: string
+          last_step: number
+          subtitle: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+          word_count: number
+        }
+        Insert: {
+          author_name?: string | null
+          book_data?: Json
+          book_type?: string | null
+          cover_storage_path?: string | null
+          cover_url?: string | null
+          created_at?: string
+          genre?: string | null
+          health_score?: number | null
+          id?: string
+          last_step?: number
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+          word_count?: number
+        }
+        Update: {
+          author_name?: string | null
+          book_data?: Json
+          book_type?: string | null
+          cover_storage_path?: string | null
+          cover_url?: string | null
+          created_at?: string
+          genre?: string | null
+          health_score?: number | null
+          id?: string
+          last_step?: number
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+          word_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "books_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           ai_calls_reset_at: string | null
