@@ -11,11 +11,15 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "db:reset": "supabase db reset"
+    "db:reset": "supabase db reset",
+    "db:types": "supabase gen types typescript --local > types/supabase.ts",
+    "lint:service-role": "bash scripts/service-role-lint.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",
     "@sentry/nextjs": "^10.52.0",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.4",
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18",
