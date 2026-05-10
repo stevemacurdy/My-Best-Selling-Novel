@@ -165,3 +165,5 @@ Per Q-2.6 default, **routes re-call `verifyToken`**. Middleware does session ref
 
 ## Session Notes
 _(Filled by Claude Code during implementation)_
+
+<!-- v4.1 spec correction 2026-05-09: cookie API for @supabase/ssr@0.10 uses { getAll, setAll }, not the deprecated { get, set, remove }. Both middleware and lib/supabase/server.ts patched onto current API in this session. -->

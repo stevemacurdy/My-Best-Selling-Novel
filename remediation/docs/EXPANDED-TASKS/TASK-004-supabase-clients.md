@@ -168,3 +168,5 @@ Wire the lint into the npm scripts list and run from CI.
 
 ## Session Notes
 _(Filled by Claude Code during implementation)_
+
+<!-- v4.1 spec correction 2026-05-09: lib/supabase/server.ts patched off deprecated { get, set, remove } cookie API onto current { getAll, setAll } pattern, matching TASK-007 middleware. -->
