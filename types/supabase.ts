@@ -1,7 +1,8 @@
-// PLACEHOLDER — regenerate via `npm run db:types` after migrations TASK-011..015 land.
-// Until then, the Database type is empty so client factories type-check but no
-// table/column compile-time safety is enforced. This file exists so callers of
-// createBrowserClient<Database>() / createServerClient<Database>() resolve.
+// TODO: regenerate via 'npm run db:types' after TASK-011-015 migrations apply in Phase 3.
+// Currently empty placeholder; no table/column type safety until then.
+//
+// This file exists so callers of createBrowserClient<Database>() /
+// createServerClient<Database>() resolve at compile time before the schema lands.
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 

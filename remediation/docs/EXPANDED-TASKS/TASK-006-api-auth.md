@@ -116,3 +116,5 @@ When the test suite is built, `lib/api-auth.test.ts` should cover at minimum:
 
 ## Session Notes
 _(Filled by Claude Code during implementation)_
+
+<!-- v4.1 spec correction 2026-05-09: AAL is read via auth.mfa.getAuthenticatorAssuranceLevel(), not user.aal field; user.aal does not exist on the SDK User type. Q-2.1 vacuous-true semantics for unenrolled users are preserved. -->
