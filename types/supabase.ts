@@ -101,6 +101,63 @@ export type Database = {
           },
         ]
       }
+      chapters: {
+        Row: {
+          book_id: string
+          chapter_index: number
+          content: string
+          created_at: string
+          id: string
+          key_points: string | null
+          purpose: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+          word_count: number
+        }
+        Insert: {
+          book_id: string
+          chapter_index: number
+          content?: string
+          created_at?: string
+          id?: string
+          key_points?: string | null
+          purpose?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id: string
+          word_count?: number
+        }
+        Update: {
+          book_id?: string
+          chapter_index?: number
+          content?: string
+          created_at?: string
+          id?: string
+          key_points?: string | null
+          purpose?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+          word_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapters_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapters_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           ai_calls_reset_at: string | null
