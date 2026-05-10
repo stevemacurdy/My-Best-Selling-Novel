@@ -58,8 +58,8 @@ This pre-flight catches the case where the codebase changed between audit and re
 
 ### Resend
 - Plan: any
-- Action: Email legal@resend.com with subject "DPA Request"; or check Dashboard → Settings → Legal
-- Typical turnaround: 3-5 days
+- Action: Verify Resend account exists; download published DPA PDF from https://resend.com/static/documents/resend-dpa-signed.pdf as evidence; the DPA is auto-binding via Resend ToS acceptance per their DPA text "This Addendum shall become legally binding upon Customer entering into the Agreement."
+- Typical turnaround: immediate (click-through)
 - Subprocessors: AWS (us-east-1)
 
 ### Vercel
@@ -89,12 +89,14 @@ This pre-flight catches the case where the codebase changed between audit and re
 
 | Vendor | Status | Requested | Signed | Expires | Subprocessors | Contact |
 |---|---|---|---|---|---|---|
-| Supabase | ✅ Signed | 2026-05-04 | 2026-05-06 | Indefinite | AWS, GCP | support@supabase.io |
-| Anthropic | 🟡 Pending | 2026-05-04 | — | — | AWS | privacy@anthropic.com |
+| Supabase | ✅ Resolved (self-serve) | 2026-05-04 | 2026-05-09 | Indefinite | AWS, GCP | support@supabase.io |
+| Anthropic | ✅ Resolved (click-through) | 2026-05-04 | 2026-05-09 | Indefinite | AWS | privacy@anthropic.com |
 | Stripe | ✅ Self-served | 2026-05-04 | 2026-05-04 | Indefinite | AWS | (built into ToS) |
-| Resend | ✅ Signed | 2026-05-04 | 2026-05-07 | Indefinite | AWS | legal@resend.com |
+| Resend | ✅ Resolved (click-through) | 2026-05-04 | 2026-05-09 | Indefinite | AWS | https://resend.com/legal/dpa [^resend] |
 | Vercel | ✅ Pro plan | 2026-05-04 | 2026-05-04 | with subscription | AWS, GCP, CF | privacy@vercel.com |
 | Google Analytics | ✅ Accepted | 2026-05-04 | 2026-05-04 | Indefinite | Google Cloud | (Admin console) |
+
+[^resend]: Auto-bound via ToS per DPA text; pre-signed PDF at https://resend.com/static/documents/resend-dpa-signed.pdf
 ```
 
 ## Public Privacy Policy update
