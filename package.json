@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > types/supabase.ts",
+    "db:types": "npx supabase gen types typescript --linked 2>/dev/null | grep -v '^Initialising' > types/supabase.ts",
     "lint:service-role": "bash scripts/service-role-lint.sh"
   },
   "dependencies": {
