@@ -75,3 +75,14 @@ Confirmed deferred per Path B + A.3 + Q-A:
 
 If a Tier B item gets stuck for more than 60 days, consider whether to defer to v1.1 or simplify.
 
+---
+
+## v4 packet corrections (discovered during Phase 3 application 2026-05-09)
+
+The following R-TASK migrations in `remediation/supabase/migrations/` have issues that were patched locally in `supabase/migrations/` during application. Future packet rebuilds (v4.2+) should land these fixes in the canonical:
+
+- [ ] `010_stripe_webhook_events.sql` — no local change; flagged for context. 010 contains an `ADD CONSTRAINT subscriptions_session_unique UNIQUE (stripe_session_id)` on the subscriptions table that is duplicated in 011. We patched 011 in this build (idempotency wrap), leaving 010 untouched. The design question for v4.2: should the constraint be removed from 010 (since 010's purpose is creating `stripe_webhook_events`, not modifying `subscriptions`) and stay in 011 alone, or should 011 be deleted entirely and 010 keep its constraint? Either resolution is valid; the choice should be made deliberately, not by accident.
+- [ ] `011_subscriptions_unique.sql` — header self-labels as paired with 010; `ADD CONSTRAINT` is not idempotent. Fix applied locally: wrap in DO block checking `pg_constraint`. Canonical fix options: align with the 010 resolution above (remove from 010, keep idempotent in 011; or delete 011 entirely).
+- [ ] `015_soft_delete_columns.sql` — policy DROP statements use title-case names (`Users see own books`, `Users see own chapters`) that don't match base migrations 002+003 (which use snake_case `books_select_own`, `chapters_select_own`). Fix applied locally: add `DROP POLICY IF EXISTS` for the snake_case names alongside the canonical title-case ones. Canonical fix: align policy DROPs with the snake_case naming convention used by base migrations.
+- [ ] `015_soft_delete_columns.sql` (separate item) — only updates the SELECT policy. The pre-existing INSERT/UPDATE/DELETE policies on books and chapters still don't filter by `deleted_at`, so a user can still update or delete a soft-deleted row. The soft-delete contract is partial. Canonical fix: add `AND deleted_at IS NULL` (or equivalent) to the WITH CHECK / USING clauses of the *_update_own and *_delete_own policies, or replace them with new ones.
+

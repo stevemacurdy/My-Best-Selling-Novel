@@ -153,6 +153,54 @@ export type Database = {
           },
         ]
       }
+      audit_event_log: {
+        Row: {
+          action: string
+          actor_email_snapshot: string | null
+          actor_id: string | null
+          actor_id_snapshot: string
+          actor_role_snapshot: string | null
+          id: string
+          ip_address: unknown
+          metadata: Json | null
+          occurred_at: string
+          request_id: string | null
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_email_snapshot?: string | null
+          actor_id?: string | null
+          actor_id_snapshot: string
+          actor_role_snapshot?: string | null
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          occurred_at?: string
+          request_id?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email_snapshot?: string | null
+          actor_id?: string | null
+          actor_id_snapshot?: string
+          actor_role_snapshot?: string | null
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          occurred_at?: string
+          request_id?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       books: {
         Row: {
           author_name: string | null
@@ -161,6 +209,7 @@ export type Database = {
           cover_storage_path: string | null
           cover_url: string | null
           created_at: string
+          deleted_at: string | null
           genre: string | null
           health_score: number | null
           id: string
@@ -178,6 +227,7 @@ export type Database = {
           cover_storage_path?: string | null
           cover_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           genre?: string | null
           health_score?: number | null
           id?: string
@@ -195,6 +245,7 @@ export type Database = {
           cover_storage_path?: string | null
           cover_url?: string | null
           created_at?: string
+          deleted_at?: string | null
           genre?: string | null
           health_score?: number | null
           id?: string
@@ -221,6 +272,7 @@ export type Database = {
           chapter_index: number
           content: string
           created_at: string
+          deleted_at: string | null
           id: string
           key_points: string | null
           purpose: string | null
@@ -234,6 +286,7 @@ export type Database = {
           chapter_index: number
           content?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           key_points?: string | null
           purpose?: string | null
@@ -247,6 +300,7 @@ export type Database = {
           chapter_index?: number
           content?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           key_points?: string | null
           purpose?: string | null
@@ -265,6 +319,166 @@ export type Database = {
           },
           {
             foreignKeyName: "chapters_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deletion_requests: {
+        Row: {
+          cancellation_reason: string | null
+          confirm_token: string
+          confirm_token_expires_at: string
+          confirmed_at: string | null
+          executed_at: string | null
+          failure_reason: string | null
+          id: string
+          metadata: Json | null
+          refund_eligible: boolean
+          requested_at: string
+          scheduled_deletion_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          confirm_token: string
+          confirm_token_expires_at: string
+          confirmed_at?: string | null
+          executed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          metadata?: Json | null
+          refund_eligible?: boolean
+          requested_at?: string
+          scheduled_deletion_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          cancellation_reason?: string | null
+          confirm_token?: string
+          confirm_token_expires_at?: string
+          confirmed_at?: string | null
+          executed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          metadata?: Json | null
+          refund_eligible?: boolean
+          requested_at?: string
+          scheduled_deletion_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deletion_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_acceptances: {
+        Row: {
+          accepted_at: string
+          document_version_id: string
+          id: string
+          ip_address: unknown
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          document_version_id: string
+          id?: string
+          ip_address?: unknown
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          document_version_id?: string
+          id?: string
+          ip_address?: unknown
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_acceptances_document_version_id_fkey"
+            columns: ["document_version_id"]
+            isOneToOne: false
+            referencedRelation: "document_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_acceptances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_versions: {
+        Row: {
+          content_url: string
+          created_at: string
+          document: string
+          effective_at: string
+          id: string
+          superseded_at: string | null
+          version: string
+        }
+        Insert: {
+          content_url: string
+          created_at?: string
+          document: string
+          effective_at: string
+          id?: string
+          superseded_at?: string | null
+          version: string
+        }
+        Update: {
+          content_url?: string
+          created_at?: string
+          document?: string
+          effective_at?: string
+          id?: string
+          superseded_at?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
+      mfa_recovery_codes: {
+        Row: {
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mfa_recovery_codes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -320,6 +534,45 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          api_version: string | null
+          event_id: string
+          event_type: string
+          failure_reason: string | null
+          livemode: boolean
+          payload: Json
+          processed_at: string | null
+          processing_status: string
+          received_at: string
+          retry_count: number
+        }
+        Insert: {
+          api_version?: string | null
+          event_id: string
+          event_type: string
+          failure_reason?: string | null
+          livemode: boolean
+          payload: Json
+          processed_at?: string | null
+          processing_status?: string
+          received_at?: string
+          retry_count?: number
+        }
+        Update: {
+          api_version?: string | null
+          event_id?: string
+          event_type?: string
+          failure_reason?: string | null
+          livemode?: boolean
+          payload?: Json
+          processed_at?: string | null
+          processing_status?: string
+          received_at?: string
+          retry_count?: number
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
@@ -331,6 +584,7 @@ export type Database = {
           status: string
           stripe_customer_id: string
           stripe_price_id: string
+          stripe_session_id: string | null
           tier: string
           updated_at: string
           user_id: string
@@ -345,6 +599,7 @@ export type Database = {
           status: string
           stripe_customer_id: string
           stripe_price_id: string
+          stripe_session_id?: string | null
           tier: string
           updated_at?: string
           user_id: string
@@ -359,6 +614,7 @@ export type Database = {
           status?: string
           stripe_customer_id?: string
           stripe_price_id?: string
+          stripe_session_id?: string | null
           tier?: string
           updated_at?: string
           user_id?: string
