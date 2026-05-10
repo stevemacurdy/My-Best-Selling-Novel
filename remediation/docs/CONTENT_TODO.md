@@ -75,8 +75,3 @@ Confirmed deferred per Path B + A.3 + Q-A:
 
 If a Tier B item gets stuck for more than 60 days, consider whether to defer to v1.1 or simplify.
 
----
-
-## Spec follow-ups
-
-- [ ] After Phase 3 migrations apply, regenerate types/supabase.ts with 'npm run db:types' (TASK-004 follow-up).
