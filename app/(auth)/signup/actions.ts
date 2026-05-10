@@ -19,12 +19,14 @@ export type SignupResult =
   | { ok: true; redirectTo: string }
   | { ok: false; error: SignupError };
 
-// FOOTER NOTE — temporary redirect deviation from spec:
-// Spec calls for redirect to `/app` after signup. `/app` is built in Phase 5+.
-// Until that route exists, redirect to `/` (landing) so the user lands on a
-// real page rather than a 404. The deferred work (MFA banner on /app, email-
-// verification banner, mfa_banner_dismissed column on profiles) ships when
-// /app does. See PROGRESS.md.
+// Temporary redirect deviation from spec: spec calls for redirect to `/app`
+// after signup. `/app` is built in Phase 5+. Until then, redirect to `/`
+// (landing) so the user lands on a real page rather than a 404. The MFA
+// banner UX and email-verification banner ship when /app does.
+//
+// TODO (Phase 5 / R-TASK-103): when /app exists and the MFA banner is rendered,
+// recording dismissal needs profiles.mfa_banner_dismissed BOOLEAN column.
+// Add via migration 017 at that time. Skipping for now since no UI consumes it.
 const POST_SIGNUP_REDIRECT = '/';
 
 export async function signupAction(formData: FormData): Promise<SignupResult> {

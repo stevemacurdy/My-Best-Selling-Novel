@@ -92,6 +92,14 @@ These are one-time operator actions that must happen AFTER the operator's first 
 
 ---
 
+## Spec follow-ups
+
+Deferred prerequisites that will become unblocked when their owning phase ships.
+
+- [ ] Phase 5 prerequisite: add profiles.mfa_banner_dismissed BOOLEAN DEFAULT FALSE column via new migration. Required by R-TASK-103 MFA banner dismissal UX in /app.
+
+---
+
 ## v4 packet corrections (discovered during Phase 3 application 2026-05-09)
 
 The following R-TASK migrations in `remediation/supabase/migrations/` have issues that were patched locally in `supabase/migrations/` during application. Future packet rebuilds (v4.2+) should land these fixes in the canonical:
