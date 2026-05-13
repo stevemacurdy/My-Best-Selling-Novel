@@ -17,6 +17,7 @@ const PUBLIC_PATH_PREFIXES = [
   '/a11y-statement',
   '/api/health',
   '/api/stripe/webhook',
+  '/auth',
 ];
 
 export function isPublicPath(pathname: string): boolean {

@@ -18,7 +18,8 @@ export type SignupError =
   | 'signup_failed';
 
 export type SignupResult =
-  | { ok: true; redirectTo: string }
+  | { ok: true; verifyEmail: true; email: string }
+  | { ok: true; verifyEmail: false; redirectTo: string }
   | { ok: false; error: SignupError };
 
 // Temporary redirect deviation from spec: spec calls for redirect to `/app`
@@ -79,12 +80,26 @@ export async function signupAction(formData: FormData): Promise<SignupResult> {
     },
   );
 
+  // Runtime host detection (vs. reading NEXT_PUBLIC_SITE_URL). The email
+  // verification link needs to point back to whichever host the user signed up
+  // from — localhost during dev, the per-PR Vercel preview hostname during
+  // staging, the prod domain in production. An env var has to be set correctly
+  // in each environment; Vercel preview hostnames are dynamic and can't be
+  // hardcoded. Reading `host` + `x-forwarded-proto` from the incoming request
+  // headers handles all three cases without configuration.
+  const hdrs = headers();
+  const host = hdrs.get('host') ?? 'localhost:3000';
+  const proto =
+    hdrs.get('x-forwarded-proto') ??
+    (host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https');
+  const baseUrl = `${proto}://${host}`;
+
   const { data, error: signupErr } = await sb.auth.signUp({
     email,
     password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}${POST_SIGNUP_REDIRECT}`,
+      emailRedirectTo: `${baseUrl}/auth/callback`,
     },
   });
 
@@ -100,7 +115,6 @@ export async function signupAction(formData: FormData): Promise<SignupResult> {
     return { ok: false, error: 'signup_failed' };
   }
 
-  const hdrs = headers();
   const ip =
     hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? hdrs.get('x-real-ip') ?? null;
   const ua = hdrs.get('user-agent') ?? null;
@@ -152,5 +166,15 @@ export async function signupAction(formData: FormData): Promise<SignupResult> {
     return { ok: false, error: 'acceptance_failed' };
   }
 
-  return { ok: true, redirectTo: POST_SIGNUP_REDIRECT };
+  // Email-confirmation flow is the locked v1 posture (see CONTENT_TODO.md
+  // "Operator manual setup actions"). When Supabase has email confirmation
+  // ON, auth.signUp returns data.session === null and the user must click the
+  // verification link before they have a session. Branch the return so the
+  // form can render an interstitial. The session-populated branch is
+  // defense-in-depth for the case where confirmation is accidentally toggled
+  // off or admin.createUser was used to bypass it.
+  if (data.session) {
+    return { ok: true, verifyEmail: false, redirectTo: POST_SIGNUP_REDIRECT };
+  }
+  return { ok: true, verifyEmail: true, email };
 }

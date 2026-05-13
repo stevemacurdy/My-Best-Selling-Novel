@@ -46,6 +46,7 @@ export function SignupForm() {
   const [acceptedTos, setAcceptedTos] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [acceptedRefunds, setAcceptedRefunds] = useState(false);
+  const [pendingVerification, setPendingVerification] = useState<string | null>(null);
 
   const allAccepted = acceptedTos && acceptedPrivacy && acceptedRefunds;
 
@@ -53,12 +54,46 @@ export function SignupForm() {
     setError(null);
     startTransition(async () => {
       const result = await signupAction(formData);
-      if (result.ok) {
-        router.replace(result.redirectTo);
-      } else {
+      if (!result.ok) {
         setError(result.error);
+        return;
+      }
+      if (result.verifyEmail) {
+        setPendingVerification(result.email);
+      } else {
+        router.replace(result.redirectTo);
       }
     });
+  }
+
+  function resetToForm() {
+    setPendingVerification(null);
+    setError(null);
+    setAcceptedTos(false);
+    setAcceptedPrivacy(false);
+    setAcceptedRefunds(false);
+  }
+
+  if (pendingVerification) {
+    return (
+      <div className="w-full max-w-md mx-auto p-8 rounded-lg bg-brand-navyLight">
+        <h1 className="text-3xl mb-4">Check your inbox</h1>
+        <p className="mb-6">
+          We sent a verification link to <strong>{pendingVerification}</strong>. Click it to finish
+          creating your account.
+        </p>
+        <p className="text-sm text-brand-textSubtle">
+          Wrong email?{' '}
+          <button
+            type="button"
+            onClick={resetToForm}
+            className="underline text-brand-white"
+          >
+            Sign up again
+          </button>
+        </p>
+      </div>
+    );
   }
 
   return (

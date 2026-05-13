@@ -81,14 +81,30 @@ If a Tier B item gets stuck for more than 60 days, consider whether to defer to 
 
 One-time operator actions that gate Phase-2 flows. Some run BEFORE first signup (project-level Supabase settings); some run AFTER first signup (require an authenticated row to exist).
 
-- [ ] Confirm Supabase email-confirmation setting matches Q-2.11
-  When: BEFORE first production signup. Required to make the spec's "soft email-verify gate" UX work as designed (user auto-signed-in on signup, banner on /app reminding them to verify).
-  How: Supabase Dashboard → Authentication → Sign In / Providers → Email provider → toggle "Confirm email" OFF. (If your dashboard version lists it elsewhere, search the Auth settings panel for "Confirm email" or "Enable email confirmations".)
-  Verify: in Supabase SQL Editor run a test signup and inspect auth.users:
+- [ ] Verify Supabase URL Configuration
+  When: BEFORE first production signup. Email verification links and OAuth callbacks fail silently or redirect to the wrong host if these values aren't set. Hard prerequisite for the email-verification flow (entry below) to work end-to-end.
+  How: Supabase Dashboard → Authentication → URL Configuration. Set:
+    - Site URL: http://localhost:3000 for current dev work; change to https://mybestsellingnovel.com at deploy.
+    - Redirect URLs (allowlist) — add all three patterns:
+      • http://localhost:3000/**
+      • https://mybestsellingnovel.com/**
+      • https://*.vercel.app/**            (for Vercel preview deploys)
+    The /** wildcard form matches the /auth/callback path the signup flow uses.
+  Verify: trigger a test signup with an email you control; click the verification link in the resulting email; confirm the browser lands on /auth/callback?code=... on the correct host (localhost during dev, deployed host in prod). If the link bounces to Supabase's default fallback or an unfamiliar host, an entry is missing from the allowlist.
+  Why this can't be automated: project-level auth setting in the Supabase Dashboard, not exposed through the SDK or any env var.
+
+- [ ] Verify Supabase email-confirmation setting is ON (locked v1 posture)
+  When: BEFORE first production signup. Hard-gate email verification is the v1 production posture and is durable — not "until we measure conversion."
+  How: Supabase Dashboard → Authentication → Sign In / Providers → Email provider → confirm "Confirm email" toggle is ON. This is Supabase's default; the toggle should already be ON unless explicitly disabled earlier.
+  Verify: trigger a test signup; inspect auth.users:
     SELECT email, email_confirmed_at IS NOT NULL AS auto_confirmed FROM auth.users ORDER BY created_at DESC LIMIT 1;
-    With the setting OFF, auto_confirmed should be true. (Alternate proof: signupAction's auth.signUp call returns data.session as a non-null object, visible in Sentry breadcrumbs.)
-  Alternative: keep "Confirm email" ON, and operator handles re-verification flow manually for every new user. Not recommended at v1 launch; the spec assumes the soft-gate model.
-  Why this can't be automated: it's a project-level auth setting in the Supabase Dashboard, not exposed through the SDK or any env var the build controls.
+    With the setting ON, auto_confirmed should be false until the user clicks the verification link. Alternate proof: signupAction's auth.signUp call returns data.session === null and SignupForm renders the "Check your inbox" interstitial rather than redirecting.
+  Locked v1 posture — do NOT toggle OFF without a specific reason and a written decision record. Reasons:
+    1. Supabase production-default behavior.
+    2. Bot/abuse defense for an AI-quota-protected service.
+    3. Password reset recovery requires a deliverable email — a typo at signup creates an unrecoverable account otherwise.
+    4. CAN-SPAM and GDPR compliance for contact-by-email obligations.
+  Why this can't be automated: project-level auth setting in the Supabase Dashboard, not exposed through the SDK or any env var.
 
 - [ ] Promote operator to super_admin role
   When: Immediately after Steve completes signup at /signup
