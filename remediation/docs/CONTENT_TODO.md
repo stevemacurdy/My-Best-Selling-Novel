@@ -77,9 +77,18 @@ If a Tier B item gets stuck for more than 60 days, consider whether to defer to 
 
 ---
 
-## Post-signup operator actions
+## Operator manual setup actions
 
-These are one-time operator actions that must happen AFTER the operator's first signup, but BEFORE production traffic. They cannot be automated because they require an authenticated user to exist first.
+One-time operator actions that gate Phase-2 flows. Some run BEFORE first signup (project-level Supabase settings); some run AFTER first signup (require an authenticated row to exist).
+
+- [ ] Confirm Supabase email-confirmation setting matches Q-2.11
+  When: BEFORE first production signup. Required to make the spec's "soft email-verify gate" UX work as designed (user auto-signed-in on signup, banner on /app reminding them to verify).
+  How: Supabase Dashboard → Authentication → Sign In / Providers → Email provider → toggle "Confirm email" OFF. (If your dashboard version lists it elsewhere, search the Auth settings panel for "Confirm email" or "Enable email confirmations".)
+  Verify: in Supabase SQL Editor run a test signup and inspect auth.users:
+    SELECT email, email_confirmed_at IS NOT NULL AS auto_confirmed FROM auth.users ORDER BY created_at DESC LIMIT 1;
+    With the setting OFF, auto_confirmed should be true. (Alternate proof: signupAction's auth.signUp call returns data.session as a non-null object, visible in Sentry breadcrumbs.)
+  Alternative: keep "Confirm email" ON, and operator handles re-verification flow manually for every new user. Not recommended at v1 launch; the spec assumes the soft-gate model.
+  Why this can't be automated: it's a project-level auth setting in the Supabase Dashboard, not exposed through the SDK or any env var the build controls.
 
 - [ ] Promote operator to super_admin role
   When: Immediately after Steve completes signup at /signup

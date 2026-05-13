@@ -16,6 +16,16 @@ R-TASK env-var additions are owned by their R-TASK spec, not patched into TASK-0
 
 When adding a new env var: update the owning task's spec, add the var to `.env.local.example` with a `# Phase N — TASK-ID` inline comment, and update the file's header count. Don't touch TASK-003 unless a v1 runtime var is being added or removed.
 
+## Service-role allowlist convention
+
+`createServiceRoleClient()` bypasses RLS. `scripts/service-role-lint.sh` (run via `npm run lint:service-role`) enforces a layered allowlist:
+
+- **Path-allowed**: `app/api/stripe/webhook/route.ts` and `app/api/cron/*/route.ts` — entire-file allowed because their whole purpose is service-role-bearing (Decision #3 — webhook is sole source of truth for subscription writes).
+- **Marker-allowed**: anywhere else, the call must be annotated with `// service-role-allowlisted: <one-sentence reason>` on the same line or the line immediately above. Example: `app/(auth)/signup/actions.ts` records consent acceptances via service-role because `auth.signUp` returns no session when email confirmation is on, leaving the cookie-bound client without RLS context for the immediate INSERT.
+- Anywhere not covered fails the lint.
+
+When introducing a new service-role call site, prefer the marker. Add a new file to the path allowlist only when the entire file's purpose is service-role-bearing (e.g., a new cron route).
+
 ## Build spec
 
 The canonical build spec lives in `remediation/`. Start with `remediation/REMEDIATION_OVERVIEW.md` (v4 changelog at the bottom is the most current state). Decisions locked 2026-05-05; ADR-004 voided 2026-05-06 (lifetime tier eliminated).

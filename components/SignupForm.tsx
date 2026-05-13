@@ -19,6 +19,15 @@ const ERROR_COPY: Record<SignupError, React.ReactNode> = {
       instead?
     </>
   ),
+  acceptance_failed: (
+    <>
+      We couldn&rsquo;t record your consent. Please try again, or{' '}
+      <Link href="/help" className="underline">
+        contact support
+      </Link>
+      .
+    </>
+  ),
   signup_failed: (
     <>
       Something went wrong. Please try again, or{' '}

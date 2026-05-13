@@ -5,6 +5,7 @@ import { cookies, headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
 import { checkBreached } from '@/lib/hibp';
 import { recordAcceptance } from '@/lib/acceptance';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import type { Database } from '@/types/supabase';
 
 export type SignupError =
@@ -13,6 +14,7 @@ export type SignupError =
   | 'must_accept_all'
   | 'password_breached'
   | 'email_in_use'
+  | 'acceptance_failed'
   | 'signup_failed';
 
 export type SignupResult =
@@ -103,18 +105,51 @@ export async function signupAction(formData: FormData): Promise<SignupResult> {
     hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? hdrs.get('x-real-ip') ?? null;
   const ua = hdrs.get('user-agent') ?? null;
 
+  // Acceptance recording is server-trusted ingestion (the form was validated
+  // server-side; user_id comes from auth.signUp's response). RLS-via-user-
+  // session doesn't work here because auth.signUp returns data.session=null
+  // when the Supabase project has email confirmation ON, leaving the
+  // @supabase/ssr cookie-client without an authenticated context for the
+  // immediate INSERT. The service-role client is the right tool: same pattern
+  // as Decision #3 (Stripe webhook uses service-role because the server's
+  // just-completed operation is the source of truth).
+  //
+  // service-role-allowlisted: post-signup acceptance recording (R-TASK-120 signup-side)
+  const adminSb = createServiceRoleClient();
+
   // Per Q-8.4(a): the AUP is inline in the ToS, so a single 'tos' acceptance
   // covers both. Refunds and Privacy each get their own row.
   try {
     await Promise.all([
-      recordAcceptance({ sb, user_id: userId, document: 'tos', ip_address: ip, user_agent: ua }),
-      recordAcceptance({ sb, user_id: userId, document: 'privacy', ip_address: ip, user_agent: ua }),
-      recordAcceptance({ sb, user_id: userId, document: 'refunds', ip_address: ip, user_agent: ua }),
+      recordAcceptance({ sb: adminSb, user_id: userId, document: 'tos', ip_address: ip, user_agent: ua }),
+      recordAcceptance({ sb: adminSb, user_id: userId, document: 'privacy', ip_address: ip, user_agent: ua }),
+      recordAcceptance({ sb: adminSb, user_id: userId, document: 'refunds', ip_address: ip, user_agent: ua }),
     ]);
-  } catch (err) {
-    // Don't block signup — flag for follow-up. The auth.users row + profile
-    // row are committed; the user can re-accept on next visit if a flow exists.
-    Sentry.captureException(err, { extra: { stage: 'recordAcceptance', userId } });
+  } catch (acceptanceErr) {
+    // Loud + abort. Surface the failure to the user and clean up the orphan
+    // auth.users row (FK CASCADE on profiles.id and document_acceptances.user_id
+    // removes the trigger-created profile row and any partial acceptance writes).
+    Sentry.captureException(acceptanceErr, {
+      level: 'error',
+      tags: { surface: 'signup_acceptance' },
+      extra: { stage: 'recordAcceptance', userId, email },
+    });
+
+    try {
+      await adminSb.auth.admin.deleteUser(userId);
+    } catch (cleanupErr) {
+      // Worst case: orphan auth.users row, no profile (or maybe a profile if the
+      // CASCADE didn't fire), no acceptances. The user's email is now bound to a
+      // Supabase row they can't sign in to and can't re-sign-up against. Operator
+      // must intervene via Supabase Dashboard → Authentication → Users.
+      Sentry.captureException(cleanupErr, {
+        level: 'fatal',
+        tags: { surface: 'signup_cleanup_failed' },
+        extra: { userId, email, originalError: String(acceptanceErr) },
+      });
+    }
+
+    return { ok: false, error: 'acceptance_failed' };
   }
 
   return { ok: true, redirectTo: POST_SIGNUP_REDIRECT };
