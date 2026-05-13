@@ -4,6 +4,7 @@ const PUBLIC_PATH_PREFIXES = [
   '/tour',
   '/signin',
   '/signup',
+  '/forgot',
   '/forgot-password',
   '/reset-password',
   '/terms',
