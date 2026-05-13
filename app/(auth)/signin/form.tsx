@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signinAction, type SigninError } from './actions';
+import { PasswordInput } from '@/components/PasswordInput';
 
 const ERROR_COPY: Record<SigninError, React.ReactNode> = {
   all_fields_required: 'Please enter email and password.',
@@ -92,13 +93,7 @@ export function SigninForm() {
 
       <label className="block mb-6">
         <span className="block text-sm mb-1">Password</span>
-        <input
-          name="password"
-          type="password"
-          required
-          autoComplete="current-password"
-          className="w-full px-3 py-2 rounded bg-brand-navyDeep text-brand-white border border-brand-borderLight/20"
-        />
+        <PasswordInput name="password" required autoComplete="current-password" />
       </label>
 
       <button

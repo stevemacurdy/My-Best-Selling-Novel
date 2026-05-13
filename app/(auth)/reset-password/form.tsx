@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { resetPasswordAction, type ResetPasswordError } from './actions';
+import { PasswordInput } from '@/components/PasswordInput';
 
 const ERROR_COPY: Record<ResetPasswordError, React.ReactNode> = {
   password_too_short: 'Password must be at least 12 characters.',
@@ -56,14 +57,7 @@ export function ResetPasswordForm() {
 
       <label className="block mb-4">
         <span className="block text-sm mb-1">New password</span>
-        <input
-          name="password"
-          type="password"
-          required
-          minLength={12}
-          autoComplete="new-password"
-          className="w-full px-3 py-2 rounded bg-brand-navyDeep text-brand-white border border-brand-borderLight/20"
-        />
+        <PasswordInput name="password" required minLength={12} autoComplete="new-password" />
         <span className="block text-xs mt-1 text-brand-textSubtle">
           Minimum 12 characters. Checked against known breaches.
         </span>
@@ -71,14 +65,7 @@ export function ResetPasswordForm() {
 
       <label className="block mb-6">
         <span className="block text-sm mb-1">Confirm new password</span>
-        <input
-          name="confirm"
-          type="password"
-          required
-          minLength={12}
-          autoComplete="new-password"
-          className="w-full px-3 py-2 rounded bg-brand-navyDeep text-brand-white border border-brand-borderLight/20"
-        />
+        <PasswordInput name="confirm" required minLength={12} autoComplete="new-password" />
       </label>
 
       <button
