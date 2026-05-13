@@ -43,6 +43,14 @@ export async function resetPasswordAction(formData: FormData): Promise<ResetPass
 
   const { error } = await sb.auth.updateUser({ password });
   if (error) {
+    // TEMPORARY DIAGNOSTIC (2026-05-13): surface the raw Supabase error in the
+    // dev shell so we can identify what's producing `reset_failed`. Sentry is
+    // capturing too, but the operator's local env doesn't have SENTRY_AUTH_TOKEN
+    // wired to query events from CLI. Remove this console.error once the
+    // specific failure mode is mapped to its own SignupError-style code.
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[reset-password] sb.auth.updateUser error:', error);
+    }
     Sentry.captureException(error, {
       level: 'error',
       tags: { surface: 'password_reset' },
