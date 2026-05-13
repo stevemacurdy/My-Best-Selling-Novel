@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import * as Sentry from '@sentry/nextjs';
 import { ResetPasswordForm } from './form';
 
 export const metadata = {
@@ -8,40 +7,28 @@ export const metadata = {
   description: 'Set a new password for your account.',
 };
 
-// PKCE recovery flow lands here from the email link as
-//   /reset-password?code=<auth_code>
-// The page exchanges the code for a recovery session BEFORE rendering the
-// form so resetPasswordAction can call auth.updateUser against the just-
-// established session. The user already has a verified identity by this
-// point (Supabase consumed the recovery token before redirecting here);
-// the code exchange is just turning that into a session cookie.
+// Robust to two entry paths:
+//   1. From the password-recovery email link via /auth/callback?next=/reset-password.
+//      /auth/callback exchanges the recovery code for a session and sets cookies;
+//      by the time this page runs, getUser() returns the user.
+//   2. From an already-signed-in session (e.g., navigating here from a future
+//      /account "Change password" link). Same result: getUser() returns the
+//      user, the form renders, updateUser({ password }) updates the credential.
+//
+// In both cases the form is the same; the only check is "is a session present?".
+// If not, send to /forgot to start over.
+//
+// Code exchange used to happen here (server component) before 2026-05-13; that
+// silently dropped the session cookies and produced misleading "expired" errors
+// at submit time. Now the exchange lives in /auth/callback (a Route Handler
+// that can write cookies).
 
-export default async function ResetPasswordPage({
-  searchParams,
-}: {
-  searchParams: { code?: string; error?: string };
-}) {
-  // Surface Supabase-side errors (expired link, already used, etc.).
-  if (searchParams.error) {
-    redirect('/forgot?error=expired');
-  }
-
-  // No code → user landed here directly (not from an email). Send them back
-  // to /forgot to start over rather than showing a form they can't submit.
-  if (!searchParams.code) {
-    redirect('/forgot');
-  }
-
+export default async function ResetPasswordPage() {
   const sb = createClient();
-  const { error } = await sb.auth.exchangeCodeForSession(searchParams.code);
+  const { data } = await sb.auth.getUser();
 
-  if (error) {
-    Sentry.captureException(error, {
-      level: 'warning',
-      tags: { surface: 'password_reset' },
-      extra: { stage: 'exchangeCodeForSession' },
-    });
-    redirect('/forgot?error=expired');
+  if (!data.user) {
+    redirect('/forgot');
   }
 
   return (

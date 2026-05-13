@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import * as Sentry from '@sentry/nextjs';
+import { safeRedirectPath } from '@/lib/auth-redirects';
 
 export type SigninError =
   | 'all_fields_required'
@@ -14,27 +15,11 @@ export type SigninResult =
   | { ok: true; redirectTo: string }
   | { ok: false; error: SigninError };
 
-// Sanitize the returnTo to prevent open-redirect. Allow only same-origin
-// path+search (i.e., resolves to the same host as 'http://localhost' when
-// parsed as a relative URL). Anything with a protocol or a different origin
-// falls back to '/'.
-//
-// TODO (Phase 5): change fallback to '/app' once that route exists.
-function safeReturnTo(raw: string | null | undefined): string {
-  if (!raw) return '/';
-  try {
-    const parsed = new URL(raw, 'http://localhost');
-    if (parsed.origin !== 'http://localhost') return '/';
-    return parsed.pathname + parsed.search;
-  } catch {
-    return '/';
-  }
-}
-
 export async function signinAction(formData: FormData): Promise<SigninResult> {
   const email = String(formData.get('email') ?? '').toLowerCase().trim();
   const password = String(formData.get('password') ?? '');
-  const returnTo = safeReturnTo(String(formData.get('returnTo') ?? ''));
+  // TODO (Phase 5): change fallback to '/app' once that route exists.
+  const returnTo = safeRedirectPath(String(formData.get('returnTo') ?? ''));
 
   if (!email || !password) return { ok: false, error: 'all_fields_required' };
 

@@ -30,8 +30,14 @@ export async function forgotAction(formData: FormData): Promise<ForgotResult> {
   // mail service (NOT Resend), and the link in the email goes to redirectTo
   // with ?code=... appended after Supabase verifies the token. Reset-link TTL
   // is 24h (Supabase default per Q-2.4).
+  //
+  // redirectTo points at /auth/callback (NOT /reset-password directly) so the
+  // PKCE code exchange runs in a Route Handler that can write cookies. After
+  // the callback sets the recovery session cookies, it redirects to
+  // /reset-password where the form is shown. See 2026-05-13 debugging note in
+  // /auth/callback/route.ts.
   const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: `${baseUrl}/reset-password`,
+    redirectTo: `${baseUrl}/auth/callback?next=/reset-password`,
   });
 
   // Per the spec's privacy stance: always return ok=true regardless of whether
