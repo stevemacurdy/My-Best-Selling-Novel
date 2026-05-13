@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signupAction, type SignupError } from '@/app/(auth)/signup/actions';
+import { PasswordInput } from '@/components/PasswordInput';
 
 const ERROR_COPY: Record<SignupError, React.ReactNode> = {
   all_fields_required: 'Please fill in all fields.',
@@ -129,14 +130,7 @@ export function SignupForm() {
 
       <label className="block mb-6">
         <span className="block text-sm mb-1">Password</span>
-        <input
-          name="password"
-          type="password"
-          required
-          minLength={12}
-          autoComplete="new-password"
-          className="w-full px-3 py-2 rounded bg-brand-navyDeep text-brand-white border border-brand-borderLight/20"
-        />
+        <PasswordInput name="password" required minLength={12} autoComplete="new-password" />
         <span className="block text-xs mt-1 text-brand-textSubtle">
           Minimum 12 characters. Checked against known breaches.
         </span>
