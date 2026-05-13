@@ -120,3 +120,43 @@ export async function verifySuperAdmin(
   }
   return { authorized: true, user };
 }
+
+/**
+ * Server helpers that throw a Response on failure (Next.js route handlers
+ * catch the throw and return the Response as the HTTP response). Lets call
+ * sites unwrap the success case linearly:
+ *
+ *   const user = await requireAdmin(req);
+ *   // user is AuthUser; we wouldn't be here if not
+ *
+ * Per Q-2.15 these complement the client-side <AuthGuard>/<AdminGuard>
+ * wrappers; the guards handle UX (skeleton + redirect), the server helpers
+ * enforce the security boundary independently.
+ */
+export async function requireAuth(req: NextRequest): Promise<AuthUser> {
+  const user = await verifyToken(req);
+  if (!user) throw new Response(null, { status: 401 });
+  return user;
+}
+
+export async function requireAdmin(req: NextRequest): Promise<AuthUser> {
+  const result = await verifyAdmin(req);
+  if (!result.authorized) {
+    throw new Response(JSON.stringify({ error: result.error }), {
+      status: result.status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  return result.user;
+}
+
+export async function requireSuperAdmin(req: NextRequest): Promise<AuthUser> {
+  const result = await verifySuperAdmin(req);
+  if (!result.authorized) {
+    throw new Response(JSON.stringify({ error: result.error }), {
+      status: result.status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  return result.user;
+}
