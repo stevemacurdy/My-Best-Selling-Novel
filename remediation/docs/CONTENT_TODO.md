@@ -125,6 +125,19 @@ Deferred prerequisites that will become unblocked when their owning phase ships.
 
 ---
 
+## Vendor SDK migrations
+
+Deferred SDK-version or API-pattern migrations. Each has a deprecation warning surfaced today and a known break path on a future upgrade.
+
+- [ ] Sentry: migrate sentry.client.config.ts to instrumentation-client.ts
+  Sentry's @sentry/nextjs SDK emits a deprecation warning on every dev server start:
+  "[@sentry/nextjs] DEPRECATION WARNING: It is recommended renaming your sentry.client.config.ts file, or moving its content to instrumentation-client.ts."
+  The old file still works in Webpack. It will break when migrating to Turbopack.
+  Migration docs: https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation-client
+  Priority: low. Not blocking v1. File before any Turbopack migration.
+
+---
+
 ## v4 packet corrections (discovered during Phase 3 application 2026-05-09)
 
 The following R-TASK migrations in `remediation/supabase/migrations/` have issues that were patched locally in `supabase/migrations/` during application. Future packet rebuilds (v4.2+) should land these fixes in the canonical:
