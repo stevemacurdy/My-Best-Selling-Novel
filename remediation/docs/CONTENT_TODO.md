@@ -106,6 +106,13 @@ One-time operator actions that gate Phase-2 flows. Some run BEFORE first signup 
     4. CAN-SPAM and GDPR compliance for contact-by-email obligations.
   Why this can't be automated: project-level auth setting in the Supabase Dashboard, not exposed through the SDK or any env var.
 
+- [ ] Supabase Auth email: configure custom SMTP via Resend
+  When: Before v1 launch (or during Phase 8 SMTP work; whichever is earlier)
+  Why: Supabase's built-in shared email service rate-limits to 2 emails/hour per project with no UI knob to raise it. Recovery email flow becomes unusable after a few testing iterations until custom SMTP is configured. Hit during TASK-009 smoke testing 2026-05-13 — multiple legitimate reset attempts were silently rejected after the limit was exhausted.
+  How: Authentication → Emails → enable Custom SMTP. Use smtp.resend.com:587, username `resend`, password is Resend API key, sender from a Resend-verified domain (e.g., noreply@mybestsellingnovel.com after DNS verification).
+  Verify: trigger /forgot reset, confirm recovery_sent_at updates in auth.users and the email arrives within 1 minute.
+  Why this can't be automated: requires Resend account + API key + verified sending domain (DNS records).
+
 - [ ] Promote operator to super_admin role
   When: Immediately after Steve completes signup at /signup
   How: Run in Supabase SQL Editor:
@@ -135,6 +142,14 @@ Deferred SDK-version or API-pattern migrations. Each has a deprecation warning s
   The old file still works in Webpack. It will break when migrating to Turbopack.
   Migration docs: https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation-client
   Priority: low. Not blocking v1. File before any Turbopack migration.
+
+---
+
+## Known issues
+
+Deferred investigations and observed bugs awaiting reproduction. Distinct from v4 packet corrections (spec-side gaps) — this section tracks code-side issues that need more diagnostic data before they can be fixed.
+
+- [ ] /reset-password form occasionally shows generic "Something went wrong" error after the password update has already succeeded server-side. Observed during TASK-009 smoke test 2026-05-13: SQL confirmed auth.users.updated_at reflected the password change at the time of the error display. Investigation deferred — the form's catch-all swallowed an unspecified post-update Supabase response. Diagnostic console.error was added in dev mode (commit 117f652) to surface the error on next reproduction, but the rate limit (2 emails/hour) blocked further testing in the same session. Re-investigate after custom SMTP is configured.
 
 ---
 
